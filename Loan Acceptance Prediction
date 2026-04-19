@@ -1,0 +1,97 @@
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split    
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, classification_report  
+
+# Load the dataset
+df = pd.read_csv(r"C:\Users\sogot\Downloads\bank+marketing\bank\bank.csv", sep=';')
+
+
+
+df.columns = df.columns.str.strip().str.lower()
+print(df.head())
+print(df.columns)
+print(df.describe())
+print(df.info())
+print(df.isnull().sum())
+print(df.columns.to_list())
+
+
+print(df.groupby('job')['age'].mean())
+
+# Age Distribution + Loan acceptance relationship
+plt.figure(figsize=(10,6)) 
+sns.histplot(df["age"], bins=30, kde=True)
+plt.title('Distribution of Age')
+plt.xlabel('Age')
+plt.ylabel('Frequency')
+plt.show()
+
+#Age vs Loan acceptance
+plt.figure(figsize=(10,6))
+sns.boxplot(x='y', y='age', data=df)
+plt.title('Age vs Loan Acceptance')
+plt.xlabel('Loan Acceptance (y)')
+plt.ylabel('Age')
+plt.show()
+
+#Loan acceptance by job
+job_acceptance = df.groupby('job')['y'].value_counts(normalize=True).unstack()
+print(job_acceptance)
+
+
+plt.figure(figsize=(12,6))
+job_acceptance.plot(kind='bar', stacked=True)
+plt.title('Loan Acceptance by Job')
+plt.xlabel('Job')
+plt.ylabel('Proportion of Loan Acceptance')
+plt.xticks(rotation=45)
+plt.legend(title='Loan Acceptance (y)', loc='upper right')
+plt.show()
+
+
+#Job counts
+plt.figure(figsize=(12,6))
+df['job'].value_counts().plot(kind='bar')
+plt.title('Distribution of Jobs')
+plt.xlabel('Job')
+plt.ylabel('Count')
+plt.xticks(rotation=45)
+plt.show()
+
+# #marital status vs loan acceptance
+plt.figure(figsize=(10,6))
+df['marital'].value_counts().plot(kind='bar')
+plt.title('Distribution of Marital Status')
+plt.xlabel('Marital Status')
+plt.ylabel('Count')
+plt.xticks(rotation=45)
+plt.show()
+
+#Loan acceptance by marital status
+marital_acceptance = df.groupby('marital')['y'].value_counts(normalize=True).unstack()
+print(marital_acceptance)
+
+plt.figure(figsize=(10,6))
+marital_acceptance.plot(kind='bar', stacked=True)
+plt.title('Loan Acceptance by Marital Status')
+plt.xlabel('Marital Status')
+plt.ylabel('Proportion of Loan Acceptance')
+plt.xticks(rotation=45)
+plt.legend(title='Loan Acceptance (y)', loc='upper right')
+plt.show()
+
+#train-test split
+X = df.drop('y', axis=1)
+y = df['y']
+X=pd.get_dummies(X, drop_first=True)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# Train the model
+model = LogisticRegression(max_iter=1000)
+model.fit(X_train, y_train)
+# Predict and evaluate
+y_pred = model.predict(X_test)
+coefficients = pd.DataFrame({'Feature': X.columns, 'Coefficient': model.coef_[0]})
+print(coefficients)
